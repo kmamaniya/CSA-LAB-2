@@ -48,7 +48,7 @@ class cache {
     
     cache(int blocksize ,int setsize ,int size){
         this->blocksize = blocksize;
-        this->cachesize = size;//*(long)pow(2,10);
+        this->cachesize = size*(long)pow(2,10);
         this->setsize = setsize;
         maxidentifier = (cachesize)/(blocksize*setsize);
         cout<<maxidentifier<<endl;
@@ -78,7 +78,7 @@ class cache {
     }
 
     int write(unsigned long address){
-        int tag = address/cachesize;
+        int tag = (address/blocksize)/maxidentifier;
         int index = (address/blocksize)%(maxidentifier);
         for(int i=0;i<setsize;i++){
             if(*(*(array+index)+i) == tag){
@@ -111,7 +111,7 @@ class cache {
         *(*(array+index)+*(size+index)-1) = latest;
     }
 
-    printStatus(int index){
+    void printStatus(int index){
         for(int i=0;i<*(size+index);i++){
             cout<<*(*(array+index)+i)<<" ";
         }
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]){
       cache_params>>cacheconfig.L2blocksize;           
       cache_params>>cacheconfig.L2setsize;        
       cache_params>>cacheconfig.L2size;
-      }
+    }
     
   
   
@@ -146,41 +146,22 @@ int main(int argc, char* argv[]){
    // initialize the hirearch cache system with those configs
    // probably you may define a Cache class for L1 and L2, or any data structure you like
    //cout<<"L1"<<endl;
-   //cache L1(cacheconfig.L1blocksize,cacheconfig.L1setsize,cacheconfig.L1size);
+   cache L1(cacheconfig.L1blocksize,cacheconfig.L1setsize,cacheconfig.L1size);
    //cout<<"L2"<<endl;
-   //cache L2(cacheconfig.L2blocksize,cacheconfig.L2setsize,cacheconfig.L2size);
-   cache temp(16,4,64);
-   temp.read(0b00001111);
-   temp.printStatus(0);
-   temp.read(0b01001111);
-   temp.printStatus(0);
-   temp.read(0b10001111);
-   temp.printStatus(0);
-   temp.read(0b11001111);
-   temp.printStatus(0);
-
+   cache L2(cacheconfig.L2blocksize,cacheconfig.L2setsize,cacheconfig.L2size);
    
-   temp.read(0b00001111);
-   temp.printStatus(0);
-   temp.read(0b01001111);
-   temp.printStatus(0);
-   temp.read(0b10001111);
-   temp.printStatus(0);
-   temp.read(0b11001111);
-   temp.printStatus(0);
-   temp.read(0b100001111);
-   temp.printStatus(0);
+   
 
   int L1AcceState =0; // L1 access state variable, can be one of NA, RH, RM, WH, WM;
   int L2AcceState =0; // L2 access state variable, can be one of NA, RH, RM, WH, WM;
    
-   /*
+   
     ifstream traces;
     ofstream tracesout;
     string outname;
-    outname = string(argv[2]) + ".out";
+    outname = string("trace.txt") + ".out";
     
-    traces.open(argv[2]);
+    traces.open("trace.txt");
     tracesout.open(outname.c_str());
     
     string line;
@@ -208,12 +189,17 @@ int main(int argc, char* argv[]){
                  //  and then L2 (if required), 
                  //  update the L1 and L2 access state variable;
                  
-                 
-                 
-                 
-                 
-                 
-                 
+                    if(L1.read(accessaddr.to_ulong()) == false){
+                        L1AcceState = 2;
+                        if(L2.read(accessaddr.to_ulong()) == false){
+                            L2AcceState = 2;
+                        }
+                        else L2AcceState = 1;
+                    }
+                    else{
+                        L1AcceState = 1;
+                        L2AcceState = 0;
+                    }
                  }
              else 
              {    
@@ -224,10 +210,21 @@ int main(int argc, char* argv[]){
                   
                   
                   
-                  
-                  
-                  
-                  }
+                  if(L1.write(accessaddr.to_ulong()) == false){
+                        L1AcceState = 4;
+                        if(L2.write(accessaddr.to_ulong()) == false){
+                            L2AcceState = 4;
+                        }
+                        else L2AcceState = 3;
+                    }
+                    else{
+                        L1AcceState = 3;
+                        if(L2.write(accessaddr.to_ulong())==false){
+                            L2AcceState = 4;
+                        }
+                        else L2AcceState = 3;
+                    }
+            }
               
               
              
@@ -241,7 +238,7 @@ int main(int argc, char* argv[]){
     else cout<< "Unable to open trace or traceout file ";
 
 
-    */
+    
     
   
 
