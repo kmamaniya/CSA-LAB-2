@@ -49,14 +49,22 @@ class cache {
     cache(int blocksize ,int setsize ,int size){
         this->blocksize = blocksize;
         this->cachesize = size*(long)pow(2,10);
-        this->setsize = setsize;
-        maxidentifier = (cachesize)/(blocksize*setsize);
+        if(setsize == 0)
+            this->setsize = this->cachesize/blocksize;
+        else
+            this->setsize = setsize;
+        
+        if(setsize == 0)
+            maxidentifier = 1;
+        else
+            maxidentifier = (cachesize)/(blocksize*setsize);
+            
         cout<<maxidentifier<<endl;
-        cout<<setsize<<endl;
+        cout<<this->setsize<<endl;
         array = new int *[maxidentifier];
         this->size = new int [maxidentifier];
         for(int i=0; i<maxidentifier; i++){
-            *(array+i) = new int[setsize];
+            *(array+i) = new int[this->setsize];
             *(this->size+i) = 0;
         }
     }
@@ -117,6 +125,14 @@ class cache {
         }
         cout<<endl;
     }
+    ~cache(){
+        for(int i=0; i<maxidentifier; i++){
+            delete [] *(array+i);
+        }
+        delete [] array;
+        delete [] size;
+        
+    }
 };
        
 
@@ -127,7 +143,7 @@ int main(int argc, char* argv[]){
     config cacheconfig;
     ifstream cache_params;
     string dummyLine;
-    cache_params.open("cacheconfig.txt"); //filename
+    cache_params.open(argv[1]); //filename
     while(!cache_params.eof())  // read config file
     {
       cache_params>>dummyLine;
@@ -147,6 +163,7 @@ int main(int argc, char* argv[]){
    // probably you may define a Cache class for L1 and L2, or any data structure you like
    //cout<<"L1"<<endl;
    cache L1(cacheconfig.L1blocksize,cacheconfig.L1setsize,cacheconfig.L1size);
+   //cache L1(4,0,2);
    //cout<<"L2"<<endl;
    cache L2(cacheconfig.L2blocksize,cacheconfig.L2setsize,cacheconfig.L2size);
    
@@ -159,9 +176,9 @@ int main(int argc, char* argv[]){
     ifstream traces;
     ofstream tracesout;
     string outname;
-    outname = string("trace.txt") + ".out";
+    outname = string(argv[2]) + ".out";
     
-    traces.open("trace.txt");
+    traces.open(argv[2]);
     tracesout.open(outname.c_str());
     
     string line;
@@ -225,12 +242,7 @@ int main(int argc, char* argv[]){
                         else L2AcceState = 3;
                     }
             }
-              
-              
-             
-            tracesout<< L1AcceState << " " << L2AcceState << endl;  // Output hit/miss results for L1 and L2 to the output file;
-             
-             
+            tracesout<< L1AcceState << " " << L2AcceState << endl;  // Output hit/miss results for L1 and L2 to the output file    
         }
         traces.close();
         tracesout.close(); 
