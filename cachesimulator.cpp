@@ -32,13 +32,93 @@ struct config{
        int L2blocksize;
        int L2setsize;
        int L2size;
-       };
+    };
 
-/* you can define the cache class here, or design your own data structure for L1 and L2 cache
+// you can define the cache class here, or design your own data structure for L1 and L2 cache
 class cache {
-      
-      }
-*/       
+    public:
+    unsigned long cachesize;
+    unsigned long blocksize;
+    long maxidentifier;
+    int setsize;
+    int **array;
+    int * size;
+    
+    cache(){}
+    
+    cache(int blocksize ,int setsize ,int size){
+        this->blocksize = blocksize;
+        this->cachesize = size;//*(long)pow(2,10);
+        this->setsize = setsize;
+        maxidentifier = (cachesize)/(blocksize*setsize);
+        cout<<maxidentifier<<endl;
+        cout<<setsize<<endl;
+        array = new int *[maxidentifier];
+        this->size = new int [maxidentifier];
+        for(int i=0; i<maxidentifier; i++){
+            *(array+i) = new int[setsize];
+            *(this->size+i) = 0;
+        }
+    }
+
+    bool read(unsigned long address){
+        int tag = (address/blocksize)/maxidentifier;
+        int index = (address/blocksize)%(maxidentifier);
+        //cout<<index<<endl;
+        //cout<<tag<<endl;
+        for(int i=0;i<*(size+index);i++){
+            if((*(*(array+index)+i) == tag)){
+                updateLRU(index,i);
+                return true;
+            }
+        }
+        discardLRU(index);
+        fetch(index,address);
+        return false;        
+    }
+
+    int write(unsigned long address){
+        int tag = address/cachesize;
+        int index = (address/blocksize)%(maxidentifier);
+        for(int i=0;i<setsize;i++){
+            if(*(*(array+index)+i) == tag){
+                updateLRU(index,i);
+                return true;
+            }
+        }
+        return false; 
+    }
+    void discardLRU(int index){
+        if( *(size+index) == setsize){
+            for(int i=0;i<*(size+index)-1;i++)
+                *(*(array+index)+i) = *(*(array+index)+i+1);
+            *(size+index)-=1;
+        }
+    }
+    void fetch(int index, unsigned long address){
+        *(*(array+index)+*(size+index)) = (address/blocksize)/maxidentifier;
+        //cout<<"array "<<index<<" "<<*(size+index)<<" =\t"<<*(*(array+index)+*(size+index));
+        *(size+index)+=1;
+        //cout<<" "<<*(size+index)<<endl;
+    }
+
+    void updateLRU(int index,int i){
+        int latest = *(*(array+index)+i);
+        for(i;i<*(size+index)-1;i++){
+            *(*(array+index)+i) = *(*(array+index)+i+1);
+        }
+
+        *(*(array+index)+*(size+index)-1) = latest;
+    }
+
+    printStatus(int index){
+        for(int i=0;i<*(size+index);i++){
+            cout<<*(*(array+index)+i)<<" ";
+        }
+        cout<<endl;
+    }
+};
+       
 
 int main(int argc, char* argv[]){
 
@@ -47,7 +127,7 @@ int main(int argc, char* argv[]){
     config cacheconfig;
     ifstream cache_params;
     string dummyLine;
-    cache_params.open(argv[1]);
+    cache_params.open("cacheconfig.txt"); //filename
     while(!cache_params.eof())  // read config file
     {
       cache_params>>dummyLine;
@@ -65,14 +145,36 @@ int main(int argc, char* argv[]){
    // Implement by you: 
    // initialize the hirearch cache system with those configs
    // probably you may define a Cache class for L1 and L2, or any data structure you like
+   //cout<<"L1"<<endl;
+   //cache L1(cacheconfig.L1blocksize,cacheconfig.L1setsize,cacheconfig.L1size);
+   //cout<<"L2"<<endl;
+   //cache L2(cacheconfig.L2blocksize,cacheconfig.L2setsize,cacheconfig.L2size);
+   cache temp(16,4,64);
+   temp.read(0b00001111);
+   temp.printStatus(0);
+   temp.read(0b01001111);
+   temp.printStatus(0);
+   temp.read(0b10001111);
+   temp.printStatus(0);
+   temp.read(0b11001111);
+   temp.printStatus(0);
+
    
-   
-   
-   
+   temp.read(0b00001111);
+   temp.printStatus(0);
+   temp.read(0b01001111);
+   temp.printStatus(0);
+   temp.read(0b10001111);
+   temp.printStatus(0);
+   temp.read(0b11001111);
+   temp.printStatus(0);
+   temp.read(0b100001111);
+   temp.printStatus(0);
+
   int L1AcceState =0; // L1 access state variable, can be one of NA, RH, RM, WH, WM;
   int L2AcceState =0; // L2 access state variable, can be one of NA, RH, RM, WH, WM;
    
-   
+   /*
     ifstream traces;
     ofstream tracesout;
     string outname;
@@ -139,7 +241,7 @@ int main(int argc, char* argv[]){
     else cout<< "Unable to open trace or traceout file ";
 
 
-   
+    */
     
   
 
