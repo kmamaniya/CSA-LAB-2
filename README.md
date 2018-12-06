@@ -1,4 +1,4 @@
-# portable potato
+# Cache Simulator
 
 Cache Simulator for MIPS ISA
 
