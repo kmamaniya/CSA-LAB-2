@@ -7,3 +7,5 @@ This simulation emulates the L1 and L2 cache whose configurations are defined in
 The caches are write-through, direct and fully associative associative and non inclusive type.
 
 The outputs are generated with a ".out" extention.
+
+This is an original course work, copying/taking reference of this code without citation is considered plagarism.
